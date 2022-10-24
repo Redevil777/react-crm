@@ -1,10 +1,11 @@
 import React from 'react';
+import Users from './layout/Users/Users';
 
 function App() {
   return (
-    <div>
-      Home
-    </div>
+    <>
+      <Users />
+    </>
   );
 }
 
