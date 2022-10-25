@@ -1,47 +1,44 @@
 import React from 'react';
 import styled from 'styled-components';
-import Select from 'react-select'
 import { FiArrowLeft, FiArrowRight } from 'react-icons/fi';
+import { useDispatch, useSelector } from 'react-redux';
+import {
+	SearchParams,
+	searchUsers,
+	selectSearchParams,
+	selectUserAmount,
+	updateSearchParams
+} from '../../features/Users/users-slice';
+import { TypedDispatch } from '../../store';
 
 const Container = styled.div`
 	display: flex;
-	justify-content: space-between;
 	align-items: center;
+	gap: 10px;
+	justify-content: end;
 	padding: 30px 15px;
 	border-radius: 5px;
   background-color: #FAFBFF;
-	margin-top: 100px;
+	margin-top: 50px;
 `;
 
 const PaginationInfo = styled.span`
 	
 `;
 
-const PaginationCtrl = styled.div`
-	display: flex;
-	gap: 40px;
-`;
-
-const RowsPicker = styled.div`
-	display: flex;
-	align-items: center;
-	gap: 10px;
-`;
-
-const PaginationButtons = styled.div`
-	display: flex;
-	gap: 10px;
-`;
-
 const Arrow = styled.button`
 	display: flex;
 	align-items: center;
 	justify-content: center;
+  cursor: pointer;
 	width: 40px;
 	height: 40px;
 	background-color: #FFF;
 	border-radius: 8px;
 	border: .5px solid rgba(0, 0, 0, .2);
+  &:disabled {
+    cursor: not-allowed;
+  }
 `;
 
 const ArrowLeftIcon = styled(FiArrowLeft)`
@@ -53,48 +50,67 @@ const ArrowRightIcon = styled(FiArrowRight)`
 `;
 
 const selectOptions = [
-	{ value: 5, label: 5 },
-	{ value: 10, label: 10 },
-	{ value: 15, label: 15 },
-	{ value: 20, label: 20 },
+	{ value: 25, label: 25 },
+	{ value: 50, label: 50 },
+	{ value: 100, label: 100 },
+	{ value: 200, label: 200 },
 ];
 
-const customStyles = {
-	// @ts-ignore
-	control: styles => ({ ...styles, backgroundColor: 'white' }),
-	// @ts-ignore
-	singleValue: (provided, state) => {
-		const opacity = state.isDisabled ? 0.5 : 1;
-		const transition = 'opacity 300ms';
+const Select = styled.select`
+	height: 38px;
+	width: 50px;
+	border-radius: 5px;
+	border: 1px solid #CCCCCC;
+`;
 
-		return { ...provided, opacity, transition };
-	}
-}
+const Option = styled.option`
+	text-align: center;
+`;
 
 export const UsersPagination = () => {
+	const dispatch = useDispatch<TypedDispatch>();
+	const searchParams = useSelector(selectSearchParams) as SearchParams;
+	const userAmount = useSelector(selectUserAmount);
+
+	const updateLimitHandler = (e) => {
+		dispatch(updateSearchParams({ value: +e.target.value, name: 'limit' }));
+		dispatch(searchUsers());
+	}
+
+	const arrowLeftHandler = () => {
+		let newSkipValue = +searchParams.skip - +searchParams.limit;
+		if (newSkipValue < 1) {
+			newSkipValue = 0
+		}
+		dispatch(updateSearchParams({ value: newSkipValue, name: 'skip' }));
+		dispatch(searchUsers());
+	}
+
+	const arrowRightHandler = () => {
+		const newSkipValue = +searchParams.skip + +searchParams.limit;
+		dispatch(updateSearchParams({ value: newSkipValue, name: 'skip' }));
+		dispatch(searchUsers());
+	}
+
+	const from = searchParams.skip + 1;
+
+	const to = userAmount >= searchParams.limit ? (searchParams.limit + searchParams.skip) > userAmount ? userAmount : searchParams.limit + searchParams.skip : userAmount;
+
 	return (
 		<Container>
+			<span>Rows per page:</span>
+			<Select value={searchParams.limit} onChange={updateLimitHandler}>
+				{selectOptions.map(opt => <Option key={opt.value} value={opt.value}>{opt.label}</Option>)}
+			</Select>
+			<Arrow onClick={arrowLeftHandler} disabled={from === 1} >
+				<ArrowLeftIcon />
+			</Arrow>
 			<PaginationInfo>
-				1-5 of 23
+				{`${from}-${to} of ${userAmount}`}
 			</PaginationInfo>
-			<PaginationCtrl>
-				<RowsPicker>
-					Rows per page:
-					<Select
-						styles={customStyles}
-						value={selectOptions[0]}
-						options={selectOptions}
-					/>
-				</RowsPicker>
-				<PaginationButtons>
-					<Arrow>
-						<ArrowLeftIcon />
-					</Arrow>
-					<Arrow>
-						<ArrowRightIcon />
-					</Arrow>
-				</PaginationButtons>
-			</PaginationCtrl>
+			<Arrow onClick={arrowRightHandler} disabled={(userAmount - to) <= 0} >
+				<ArrowRightIcon />
+			</Arrow>
 		</Container>
 	);
 };

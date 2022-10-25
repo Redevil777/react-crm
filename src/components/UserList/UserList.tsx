@@ -1,81 +1,44 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { Column, User } from './UserList.interface';
 import { UpdateUserModal } from '../UpdateUserModal/UpdateUserModal';
-
-const users: User[] = [
-	{
-		"isActive": true,
-		"balance": "$3,100.48",
-		"age": '26',
-		"eyeColor": "blue",
-		"name": "Lottie Crane",
-		"gender": "male",
-		"company": "DENTREX",
-		"email": "lottiecrane1@dentrex.com",
-		"phone": "+1 (921) 417-3751",
-		"address": "947 Lefferts Avenue, Chumuckla, Wyoming, 536"
-	},
-	{
-		"isActive": false,
-		"balance": "$3,100.48",
-		"age": '26',
-		"eyeColor": "brown",
-		"name": "Lottie Crane",
-		"gender": "female",
-		"company": "DENTREX",
-		"email": "lottiecrane2@dentrex.com",
-		"phone": "+1 (921) 417-3751",
-		"address": "947 Lefferts Avenue, Chumuckla, Wyoming, 536"
-	},
-	{
-		"isActive": false,
-		"balance": "$3,100.48",
-		"age": '26',
-		"eyeColor": "brown",
-		"name": "Lottie Crane",
-		"gender": "female",
-		"company": "DENTREX",
-		"email": "lottiecrane3@dentrex.com",
-		"phone": "+1 (921) 417-3751",
-		"address": "947 Lefferts Avenue, Chumuckla, Wyoming, 536"
-	},
-	{
-		"isActive": false,
-		"balance": "$3,100.48",
-		"age": '26',
-		"eyeColor": "brown",
-		"name": "Lottie Crane",
-		"gender": "female",
-		"company": "DENTREX",
-		"email": "lottiecrane4@dentrex.com",
-		"phone": "+1 (921) 417-3751",
-		"address": "947 Lefferts Avenue, Chumuckla, Wyoming, 536"
-	}
-];
+import {
+	searchUsers,
+	selectLoading,
+	selectSortParams,
+	selectUsers,
+	updateSortParams
+} from '../../features/Users/users-slice';
+import { useDispatch, useSelector } from 'react-redux';
+import { useInView } from 'react-intersection-observer';
+import { MdModeEditOutline, MdKeyboardArrowUp, MdKeyboardArrowDown } from 'react-icons/md';
+import { Loader } from '../Loader/Loader';
+import { TypedDispatch } from '../../store';
 
 const columns: Column[] = [
-	{ label: 'Status', fieldName: 'isActive' },
-	{ label: 'Balance', fieldName: 'balance' },
-	{ label: 'Age', fieldName: 'age' },
-	{ label: 'Eye Color', fieldName: 'eyeColor' },
-	{ label: 'Name', fieldName: 'name' },
-	{ label: 'Gender', fieldName: 'gender' },
-	{ label: 'Company', fieldName: 'company' },
-	{ label: 'Email', fieldName: 'email' },
-	{ label: 'Phone', fieldName: 'phone' },
-	{ label: 'Address', fieldName: 'address' },
+	{ label: 'Name', fieldName: 'name', size: '6%' },
+	{ label: 'Gender', fieldName: 'gender', size: '6%' },
+	{ label: 'Age', fieldName: 'age', size: '6%' },
+	{ label: 'Email', fieldName: 'email', size: '12%' },
+	{ label: 'Balance', fieldName: 'balance', size: '8%' },
+	{ label: 'Company', fieldName: 'company', size: '10%' },
+	{ label: 'Phone', fieldName: 'phone', size: '10%' },
+	{ label: 'Eye Color', fieldName: 'eyeColor', size: '6%' },
+	{ label: 'Address', fieldName: 'address', size: '15%' },
+	{ label: 'Status', fieldName: 'isActive', size: '10%' },
 ];
 
 const Container = styled.div`
 	overflow: auto;
 	width: 100%;
+	height: 300px;
 `;
 
 const Table = styled.table`
 	width: 100%;
   border-collapse: collapse;
   border-spacing: 0;
+  table-layout: fixed
 `;
 
 const Thead = styled.thead`
@@ -95,8 +58,16 @@ const TH = styled.th`
 	padding: 20px 15px;
 	text-align: left;
 	font-weight: 500;
-	font-size: 12px;
+	font-size: 11px;
 	text-transform: uppercase;
+	position: sticky;
+	top: 0;
+	z-index: 1;
+	background-color: #F5F5F5;
+`;
+
+const THEdit = styled(TH)`
+	width: 4%;
 `;
 
 const TD = styled.td`
@@ -106,18 +77,24 @@ const TD = styled.td`
 	font-weight: 300;
 	font-size: 12px;
 	border-bottom: 1px solid rgba(255, 255, 255, .1);
-  word-wrap: break-word;
+  overflow-wrap: break-word;
+	height: 60px;
+`;
+
+const TDEdit = styled(TD)`
+  cursor: pointer;
 `;
 
 const TR = styled.tr`
-	cursor: pointer;
 	&:hover {
 		background-color: rgba(0, 0, 0, .02);
   }
 `;
 
-const TableHeadColumn = styled.span`
+const TableHeadColumn = styled.span<any>`
 	cursor: pointer;
+	display: flex;
+	align-items: center;
 `;
 
 const Status = styled.div`
@@ -150,23 +127,41 @@ const StatusInActive = styled(Status)`
   }
 `;
 
+const VirtualScrollChild = ({ children }) => {
+	const [ref, inView] = useInView();
+	return (
+		<span ref={ref}>
+			{ inView ? children : null }
+		</span>
+	);
+}
+
 export const UserList = () => {
 	const [isUpdateUserModalShow, setIsUpdateUserModalShow] = useState(false);
 	const [currentUser, setCurrentUser] = useState<User>({});
+	const dispatch = useDispatch<TypedDispatch>();
+	const users: User[] = useSelector(selectUsers);
+	const sortParams = useSelector(selectSortParams);
+	const isLoading = useSelector(selectLoading);
+
+	useEffect(() => {
+		dispatch(searchUsers());
+	}, [dispatch]);
+
 
 	const printColumn = (user: User, column: Column) => {
+		if (column.fieldName === 'balance') {
+			return currencyFormat(user[column.fieldName])
+		}
 		if (column.fieldName !== 'isActive') {
-			type UserKey = keyof typeof user;
-			return user[column.fieldName as UserKey];
+			return user[column.fieldName];
 		}
 		const { isActive } = user;
 		if (isActive) return <StatusActive>Active</StatusActive>
 		return <StatusInActive>Inactive</StatusInActive>
 	}
 
-	const showUpdateUserModal = (user: any) => {
-		console.log('showUpdateUserModal');
-		console.log(user);
+	const showUpdateUserModal = (user: User) => {
 		setIsUpdateUserModalShow(true);
 		setCurrentUser(user);
 	}
@@ -176,29 +171,49 @@ export const UserList = () => {
 		setCurrentUser({});
 	}
 
+	const columnSortHandler = (fieldName: string) => {
+		dispatch(updateSortParams(fieldName));
+		dispatch(searchUsers());
+	}
+
+	const currencyFormat = (num: string = '') => {
+		return '$' + (+num).toFixed(2).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,')
+	}
+
 	return (
 		<>
+			<Loader isShow={isLoading} />
 			<Container>
 				<Table>
 					<Thead>
 						<tr>
 							{columns.map(column => (
-								<TH key={column.label}>
-									<TableHeadColumn>{column.label}</TableHeadColumn>
+								<TH key={column.label} style={{ width: column.size }}>
+									<TableHeadColumn
+										onClick={() => columnSortHandler(column.fieldName)}>
+										{column.label}
+										{ sortParams[column.fieldName] === 1 && <MdKeyboardArrowUp /> }
+										{ sortParams[column.fieldName] === -1 && <MdKeyboardArrowDown /> }
+									</TableHeadColumn>
 								</TH>
 							))}
+							<THEdit />
 						</tr>
 					</Thead>
 					<Tbody>
 						{users.map((user: User) => (
 							<TR
-								onClick={() => showUpdateUserModal(user)}
 								key={user.email}>
 								{columns.map((column: Column) => (
-									<TD key={column.label}>{
-										printColumn(user, column)
-									}</TD>
+									<TD key={column.label}>
+										{<VirtualScrollChild>
+											{ printColumn(user, column) }
+										</VirtualScrollChild>}
+									</TD>
 								))}
+								<TDEdit onClick={() => showUpdateUserModal(user)}>
+									<MdModeEditOutline />
+								</TDEdit>
 							</TR>
 						))}
 					</Tbody>

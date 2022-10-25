@@ -1,6 +1,8 @@
 import React from 'react';
 import styled from 'styled-components';
 import { CreateUserButton } from '../CreateUserButton/CreateUserButton';
+import { useSelector } from 'react-redux';
+import { selectUserAmount } from '../../features/Users/users-slice';
 
 const Container = styled.div`
 	display: flex;
@@ -17,11 +19,12 @@ const Title = styled.h2`
 
 
 export const UsersHeader = () => {
+	const userAmount = useSelector(selectUserAmount);
 	return (
 		<Container>
 			<TitleWrapper>
 				<Title>Users</Title>
-				<span>38 users</span>
+				<span>{`${userAmount} ${userAmount === 1 ? 'user' : 'users'}`}</span>
 			</TitleWrapper>
 			<CreateUserButton />
 		</Container>

@@ -15,7 +15,6 @@ export const FilterButton = () => {
 	const [showFilterModal, setShowFilterModal] = useState(false);
 
 	const filterHandler = () => {
-		console.log('openFilter');
 		setShowFilterModal(true);
 	}
 

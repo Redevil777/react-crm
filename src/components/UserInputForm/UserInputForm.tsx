@@ -2,7 +2,7 @@ import React from 'react';
 import { UserInputFormProps } from './UserInputForm.props';
 import styled from 'styled-components';
 import { FieldValues, useForm } from "react-hook-form";
-import { Button } from '../Button/Button';
+import { SaveButton } from '../SaveButton/SaveButton';
 
 const Form = styled.form`
 	display: grid;
@@ -24,7 +24,7 @@ const eyeColorSelectOptions = [
 	{ value: 'green', Label: 'Green' },
 ];
 
-export const Input = styled.input`
+export const Input = styled.input<any>`
   width: 70%;
 	&:not([type='checkbox']) {
     height: 30px;
@@ -55,20 +55,6 @@ const Select = styled.select`
 	outline: none;
   border:0;
   box-shadow: 0 4px 4px 2px rgba(0, 0, 0, .1);
-`;
-
-const SaveBtn = styled(Button)`
-  margin: 50px auto 10px;
-  background-color: #498249;
-  color: #FFF;
-  width: 200px;
-  padding: 15px;
-  border-radius: 5px;
-	font-size: 16px;
-
-  &:hover {
-    background-color: #4e8c4e;
-  }
 `;
 
 export const UserInputForm = ({ user, saveForm }: UserInputFormProps) => {
@@ -133,7 +119,7 @@ export const UserInputForm = ({ user, saveForm }: UserInputFormProps) => {
 					<Input {...register('isActive')} type='checkbox' />
 				</Label>
 			</Form>
-			<SaveBtn onClick={handleSubmit((data) => handleFormSubmit(data))}>SAVE</SaveBtn>
+			<SaveButton onClick={handleSubmit((data) => handleFormSubmit(data))} />
 		</>
 	);
 };

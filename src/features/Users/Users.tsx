@@ -1,6 +1,8 @@
 import React from 'react';
 import { Card, SearchInput, UserList, UsersHeader, UsersPagination } from '../../components';
 import styled from 'styled-components';
+import { NotificationContainer } from 'react-notifications';
+import 'react-notifications/lib/notifications.css';
 
 const Container = styled.div`
   background: linear-gradient(180deg, rgba(246,242,236,1) 0%, rgba(231,240,238,1) 25%, rgba(225,239,244,1) 100%);
@@ -24,6 +26,7 @@ const Users = () => {
 				<UserList />
 				<UsersPagination />
 			</Card>
+			<NotificationContainer />
 		</Container>
 	);
 };

@@ -1,6 +1,7 @@
 export interface Column {
 	label: string;
 	fieldName: string;
+	size: string;
 }
 
 export interface User {
@@ -15,5 +16,4 @@ export interface User {
 	email?: string;
 	phone?: string;
 	address?: string;
-	[key: string]: any
 }

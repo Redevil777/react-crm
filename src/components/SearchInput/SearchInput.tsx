@@ -1,13 +1,16 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import styled from 'styled-components';
 import { CiSearch } from 'react-icons/ci';
 import { FilterButton } from '../FilterButton/FilterButton';
+import { useDispatch } from 'react-redux';
+import { SearchParams, searchUsers, updateSearchInput } from '../../features/Users/users-slice';
+import { TypedDispatch } from '../../store';
 
 const InputWrapper = styled.form`
 	position: relative;
 `;
 
-const Input = styled.input`
+const Input = styled.input<any>`
 	border: .5px solid rgba(0, 0, 0, .1);
 	height: 40px;
 	width: calc(100% - 40px);
@@ -30,14 +33,19 @@ const SearchIcon = styled(CiSearch)`
 `;
 
 export const SearchInput = () => {
-	const submitSearchHandler = (e: React.FormEvent<HTMLFormElement> | React.MouseEvent) => {
+	const dispatch = useDispatch<TypedDispatch>();
+	const inputRef = useRef<HTMLInputElement>();
+
+	const submitSearchHandler = async (e: React.FormEvent<HTMLFormElement> | React.MouseEvent) => {
 		e.preventDefault();
-		console.log('search');
+
+		await dispatch(updateSearchInput({ searchInput: inputRef.current?.value } as SearchParams));
+		dispatch(searchUsers());
 	}
 
 	return (
 		<InputWrapper onSubmit={submitSearchHandler}>
-			<Input placeholder='Search for name, email, company...' />
+			<Input ref={inputRef} placeholder='Search for name, email, company...' />
 			<SearchIcon onClick={submitSearchHandler} />
 			<FilterButton />
 		</InputWrapper>

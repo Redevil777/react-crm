@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Button } from '../Button/Button';
 import { MdAddCircleOutline } from 'react-icons/md';
 import styled from 'styled-components';
-import Modal from '../Modal/Modal';
 import { CreateUserModal } from '../CreateUserModal/CreateUserModal';
 
 const CreateUserBtn = styled(Button)`
